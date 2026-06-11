@@ -149,18 +149,101 @@ let currentDayIndex = new Date().getDay(); // 0 is Sunday
 const inventoryBtn = document.getElementById('inventory-btn');
 const inventoryOverlay = document.getElementById('inventory-overlay');
 const inventoryClose = document.getElementById('inventory-close');
+const inventoryEditBtn = document.getElementById('inventory-edit-btn');
+const inventoryGrid = document.getElementById('inventory-grid');
 
-const openScheduleBtn = document.getElementById('open-schedule-btn');
 const scheduleOverlay = document.getElementById('schedule-overlay');
 const scheduleClose = document.getElementById('schedule-close');
+const spotifyOverlay = document.getElementById('spotify-overlay');
+const spotifyClose = document.getElementById('spotify-close');
 
 const prevBtn = document.getElementById('prev-day');
 const nextBtn = document.getElementById('next-day');
 const dayLabel = document.getElementById('current-day-label');
 const scheduleContainer = document.getElementById('schedule-container');
 
+// Tool Registry
+const tools = [
+  {
+    id: 'schedule',
+    label: 'Anime Schedule',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><path d="M10 8v8l6-4-6-4z"></path></svg>',
+    action: () => {
+      inventoryOverlay.classList.remove('active');
+      scheduleOverlay.classList.add('active');
+      currentDayIndex = new Date().getDay();
+      fetchSchedule();
+    }
+  },
+  {
+    id: 'spotify',
+    label: 'Spotify',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>',
+    action: () => {
+      inventoryOverlay.classList.remove('active');
+      spotifyOverlay.classList.add('active');
+    }
+  }
+];
+
+// Load prefs
+let inventoryPrefs = JSON.parse(localStorage.getItem('inventory_prefs')) || {};
+tools.forEach(tool => {
+  if (inventoryPrefs[tool.id] === undefined) {
+    inventoryPrefs[tool.id] = true; // default enabled
+  }
+});
+
+let isEditMode = false;
+
+function renderInventory() {
+  inventoryGrid.innerHTML = '';
+  tools.forEach(tool => {
+    const isEnabled = inventoryPrefs[tool.id];
+    if (!isEditMode && !isEnabled) return; // Skip disabled items in normal mode
+
+    const item = document.createElement('div');
+    item.className = 'inventory-item';
+    if (!isEnabled) item.classList.add('disabled');
+    
+    item.innerHTML = `
+      <div class="inventory-icon">${tool.icon}</div>
+      <div class="inventory-label">${tool.label}</div>
+    `;
+
+    item.addEventListener('click', () => {
+      if (isEditMode) {
+        inventoryPrefs[tool.id] = !inventoryPrefs[tool.id];
+        localStorage.setItem('inventory_prefs', JSON.stringify(inventoryPrefs));
+        renderInventory();
+      } else {
+        tool.action();
+      }
+    });
+
+    inventoryGrid.appendChild(item);
+  });
+}
+
+// Edit Mode Toggle
+inventoryEditBtn.addEventListener('click', () => {
+  isEditMode = !isEditMode;
+  if (isEditMode) {
+    inventoryGrid.classList.add('edit-mode');
+    inventoryEditBtn.classList.add('active');
+  } else {
+    inventoryGrid.classList.remove('edit-mode');
+    inventoryEditBtn.classList.remove('active');
+  }
+  renderInventory();
+});
+
 // Inventory Modal Logic
 inventoryBtn.addEventListener('click', () => {
+  isEditMode = false; // Always open in normal mode
+  inventoryGrid.classList.remove('edit-mode');
+  inventoryEditBtn.classList.remove('active');
+  renderInventory(); 
   inventoryOverlay.classList.add('active');
 });
 
@@ -172,20 +255,22 @@ inventoryOverlay.addEventListener('click', (e) => {
   if (e.target === inventoryOverlay) inventoryOverlay.classList.remove('active');
 });
 
-// Schedule Modal Logic
-openScheduleBtn.addEventListener('click', () => {
-  inventoryOverlay.classList.remove('active'); // Close inventory
-  scheduleOverlay.classList.add('active'); // Open schedule
-  currentDayIndex = new Date().getDay(); // Always start with today
-  fetchSchedule();
-});
-
+// Schedule Modal Overlays
 scheduleClose.addEventListener('click', () => {
   scheduleOverlay.classList.remove('active');
 });
 
 scheduleOverlay.addEventListener('click', (e) => {
   if (e.target === scheduleOverlay) scheduleOverlay.classList.remove('active');
+});
+
+// Spotify Modal Overlays
+spotifyClose.addEventListener('click', () => {
+  spotifyOverlay.classList.remove('active');
+});
+
+spotifyOverlay.addEventListener('click', (e) => {
+  if (e.target === spotifyOverlay) spotifyOverlay.classList.remove('active');
 });
 
 // Navigation
@@ -350,3 +435,49 @@ async function fetchSchedule() {
     scheduleContainer.innerHTML = '<div class="loading-text">Error connecting to Jikan API.</div>';
   }
 }
+
+// ── Spotify Now Playing Widget Logic ──
+const nowPlayingWidget = document.getElementById('now-playing-widget');
+const npTitle = document.getElementById('np-title');
+let currentTrackUri = null;
+
+window.onSpotifyIframeApiReady = (IFrameAPI) => {
+  const element = document.getElementById('spotify-iframe');
+  const options = {
+    width: '100%',
+    height: '352',
+    uri: 'spotify:playlist:16SjqfOmAiWIFoiC3elUwT'
+  };
+  const callback = (EmbedController) => {
+    EmbedController.addListener('playback_update', e => {
+      const { isPaused, isBuffering, playingURI } = e.data;
+      
+      if (!isPaused && !isBuffering) {
+        nowPlayingWidget.classList.add('active');
+        
+        // Only fetch title if the track changed
+        if (playingURI && playingURI !== currentTrackUri) {
+          currentTrackUri = playingURI;
+          npTitle.innerText = "Loading track data...";
+          
+          fetch(`https://open.spotify.com/oembed?url=${playingURI}`)
+            .then(res => res.json())
+            .then(data => {
+              if (data && data.title) {
+                npTitle.innerText = data.title;
+              } else {
+                npTitle.innerText = "Spotify Stream";
+              }
+            })
+            .catch(err => {
+              console.error("Error fetching track data", err);
+              npTitle.innerText = "Spotify Stream";
+            });
+        }
+      } else {
+        nowPlayingWidget.classList.remove('active');
+      }
+    });
+  };
+  IFrameAPI.createController(element, options, callback);
+};

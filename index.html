@@ -27,7 +27,7 @@
   <!-- Search (center-bottom) -->
   <div class="search-wrapper">
     <form class="search-box" action="https://www.google.com/search" method="GET">
-      <input type="text" name="q" placeholder="What are you looking for?" autocomplete="off" autofocus />
+      <input type="text" name="q" placeholder="" autocomplete="off" autofocus />
       <button type="submit">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
@@ -42,6 +42,56 @@
   <div class="quote-widget" id="quote-widget">
     <div class="quote-text" id="quote-text">"..."</div>
     <div class="quote-author" id="quote-author"></div>
+  </div>
+
+  <!-- Inventory Hub Logo -->
+  <div class="inventory-logo-btn" id="inventory-btn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+      <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+      <line x1="12" y1="22.08" x2="12" y2="12"></line>
+    </svg>
+    <span>Inventory</span>
+  </div>
+
+  <!-- Inventory Hub Modal -->
+  <div class="modal-overlay" id="inventory-overlay">
+    <div class="modal-content inventory-content">
+      <div class="modal-header">
+        <div class="modal-title">System Inventory</div>
+        <button class="modal-close" id="inventory-close">&times;</button>
+      </div>
+      <div class="inventory-grid">
+        <div class="inventory-item" id="open-schedule-btn">
+          <div class="inventory-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+              <path d="M10 8v8l6-4-6-4z"></path>
+            </svg>
+          </div>
+          <div class="inventory-label">Anime Schedule</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Anime Schedule Modal -->
+  <div class="modal-overlay" id="schedule-overlay">
+    <div class="modal-content schedule-modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Anime Schedule</div>
+        <button class="modal-close" id="schedule-close">&times;</button>
+      </div>
+      <div class="schedule-container" id="schedule-container">
+        <!-- Anime items will be injected here -->
+        <div class="loading-text">Decoupling Data Stream...</div>
+      </div>
+      <div class="day-nav">
+        <button id="prev-day">&lt;</button>
+        <span id="current-day-label">Monday</span>
+        <button id="next-day">&gt;</button>
+      </div>
+    </div>
   </div>
 
   <script src="script.js"></script>

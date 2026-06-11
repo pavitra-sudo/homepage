@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cool Homepage</title>
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+  }
+
+  body, html {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* Background video */
+  .bg-video {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    min-width: 100%;
+    min-height: 100%;
+    object-fit: cover;
+  }
+
+  /* Overlay */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(
+      rgba(0,0,0,0.55),
+      rgba(0,0,0,0.75)
+    );
+  }
+
+  /* Center content */
+  .content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: white;
+    animation: fadeIn 1.5s ease;
+  }
+
+  .time {
+    font-size: 64px;
+    font-weight: bold;
+    letter-spacing: 2px;
+  }
+
+  .date {
+    font-size: 20px;
+    margin-top: 10px;
+    opacity: 0.85;
+  }
+
+  .welcome {
+    margin-top: 18px;
+    font-size: 22px;
+    opacity: 0.9;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translate(-50%, -45%); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
+  }
+
+  /* SEARCH BAR */
+  .search-wrapper {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .search-box {
+    display: flex;
+    align-items: center;
+    width: 90%;
+    max-width: 520px;
+
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 50px;
+
+    padding: 10px 14px;
+    transition: 0.3s ease;
+  }
+
+  .search-box:hover {
+    transform: scale(1.03);
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .search-box input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: white;
+    font-size: 16px;
+    padding: 10px;
+  }
+
+  .search-box input::placeholder {
+    color: rgba(255,255,255,0.6);
+  }
+
+  .search-box button {
+    border: none;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    cursor: pointer;
+
+    background: rgba(255,255,255,0.15);
+    color: white;
+    font-size: 18px;
+
+    transition: 0.3s ease;
+  }
+
+  .search-box button:hover {
+    background: rgba(255,255,255,0.3);
+    transform: rotate(12deg);
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .time {
+      font-size: 42px;
+    }
+    .date {
+      font-size: 16px;
+    }
+  }
+
+</style>
+</head>
+
+<body>
+
+<!-- Video Background -->
+<video class="bg-video" autoplay muted loop playsinline>
+  <source src="homepage.mp4" type="video/mp4">
+</video>
+
+<div class="overlay"></div>
+
+<!-- Main Content -->
+<div class="content">
+  <div class="time" id="time">--:--:--</div>
+  <div class="date" id="date">Loading date...</div>
+  <div class="welcome" id="welcome">Welcome</div>
+</div>
+
+<!-- Search Bar -->
+<div class="search-wrapper">
+  <form class="search-box" action="https://www.google.com/search" method="GET">
+    <input type="text" name="q" placeholder="Search the web..." autocomplete="off" />
+    <button type="submit">⌕</button>
+  </form>
+</div>
+
+<script>
+function updateTime() {
+  const now = new Date();
+
+  let h = now.getHours();
+  let m = now.getMinutes();
+  let s = now.getSeconds();
+
+  h = h < 10 ? "0" + h : h;
+  m = m < 10 ? "0" + m : m;
+  s = s < 10 ? "0" + s : s;
+
+  document.getElementById("time").innerText = `${h}:${m}:${s}`;
+
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  document.getElementById("date").innerText = now.toLocaleDateString(undefined, options);
+
+  // Dynamic greeting
+  const hour = now.getHours();
+  let greeting = "Welcome";
+
+  if (hour < 12) greeting = "Good Morning";
+  else if (hour < 18) greeting = "Good Afternoon";
+  else greeting = "Good Evening";
+
+  document.getElementById("welcome").innerText = greeting;
+}
+
+setInterval(updateTime, 1000);
+updateTime();
+</script>
+
+</body>
+</html>

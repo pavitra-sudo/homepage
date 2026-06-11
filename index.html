@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Homepage</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <!-- Video Background -->
+  <video id="bg-video" class="bg-video" autoplay muted loop playsinline>
+    <source src="backgrounds/bg1.mp4" type="video/mp4">
+  </video>
+  <div class="overlay"></div>
+  <!-- Date & Time (top-left) -->
+  <div class="datetime-widget">
+    <div class="time" id="time">--:--</div>
+    <div class="date" id="date">Loading...</div>
+  </div>
+
+  <!-- Cursor Trail Canvas -->
+  <canvas id="cursor-canvas"></canvas>
+
+  <!-- Search (center-bottom) -->
+  <div class="search-wrapper">
+    <form class="search-box" action="https://www.google.com/search" method="GET">
+      <input type="text" name="q" placeholder="What are you looking for?" autocomplete="off" autofocus />
+      <button type="submit">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </button>
+    </form>
+  </div>
+
+  <!-- Quote Widget (bottom-right) -->
+  <div class="quote-widget" id="quote-widget">
+    <div class="quote-text" id="quote-text">"..."</div>
+    <div class="quote-author" id="quote-author"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>

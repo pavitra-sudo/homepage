@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -100,7 +101,8 @@ func (a *Aria2) Start(dl *core.Download, selectFiles string, onComplete func(err
 }
 
 func (a *Aria2) FetchMetadata(magnetUrl string) (string, []core.File, error) {
-	cmd := exec.Command("aria2c", "--bt-metadata-only=true", "--bt-save-metadata=true", "--bt-require-crypto=true", "--seed-time=0", magnetUrl)
+	os.MkdirAll("temp", 0755)
+	cmd := exec.Command("aria2c", "--dir=temp", "--bt-metadata-only=true", "--bt-save-metadata=true", "--bt-require-crypto=true", "--seed-time=0", magnetUrl)
 	cmd.Run()
 
 	btih := ""
@@ -111,9 +113,9 @@ func (a *Aria2) FetchMetadata(magnetUrl string) (string, []core.File, error) {
 		}
 	}
 
-	torrentFile := btih + ".torrent"
+	torrentFile := filepath.Join("temp", btih+".torrent")
 	if _, err := os.Stat(torrentFile); os.IsNotExist(err) {
-		torrentFile = strings.ToUpper(btih) + ".torrent"
+		torrentFile = filepath.Join("temp", strings.ToUpper(btih)+".torrent")
 	}
 
 	out, err := exec.Command("aria2c", "-S", torrentFile).Output()

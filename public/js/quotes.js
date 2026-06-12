@@ -29,7 +29,7 @@ export function scrambleText(element, newText) {
 
 export async function loadQuote() {
   try {
-    const res = await fetch("quotes/quotes.json");
+    const res = await fetch("config/quotes.json");
     if (!res.ok) throw new Error("Failed to load quotes");
     const quotes = await res.json();
     if (quotes && quotes.length > 0) {

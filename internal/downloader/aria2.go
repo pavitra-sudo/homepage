@@ -26,7 +26,7 @@ func NewAria2() *Aria2 {
 	return &Aria2{}
 }
 
-var progressRe = regexp.MustCompile(`\[#[a-zA-Z0-9]+\s+([^/]+)/([^\(\s]+)(?:\(([^%]+%)\))?.*?CN:([0-9]+).*?(?:SD:([0-9]+))?.*?DL:([^\]\s]+)(?:\s+ETA:([^\]]+))?\]`)
+var progressRe = regexp.MustCompile(`\[#[a-zA-Z0-9]+\s+([^/]+)/([^\(\s]+)(?:\(([^%]+%)\))?.*?CN:([0-9]+)(?:\s+SD:([0-9]+))?.*?DL:([^\]\s]+)(?:\s+ETA:([^\]]+))?\]`)
 
 func (a *Aria2) Start(dl *core.Download, selectFiles string, onComplete func(err error)) (core.Process, error) {
 	args := []string{"--dir=" + dl.Dir, "--summary-interval=1", "--seed-time=0", "--bt-require-crypto=true"}

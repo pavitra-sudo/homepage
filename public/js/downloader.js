@@ -47,7 +47,7 @@ export function initDownloader() {
         data.files.forEach(f => {
           html += `<div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem;">
             <input type="checkbox" class="dl-file-cb" value="${f.index}" checked>
-            <span style="font-size: 0.8rem; word-break: break-all;">${f.path}</span>
+            <span style="font-size: 0.8rem; word-break: break-all; color: var(--accent-red);">${f.path}</span>
           </div>`;
         });
         dlSelectFilesContainer.innerHTML = html;

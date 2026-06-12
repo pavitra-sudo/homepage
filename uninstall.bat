@@ -44,7 +44,22 @@ if exist "homepage.exe" (
     del homepage.exe
     echo [ok] 'homepage.exe' deleted.
 )
+if exist "aria2c.exe" (
+    del aria2c.exe
+    echo [ok] Local 'aria2c.exe' deleted.
+)
+
+echo.
+set /p UNINSTALL_DEPS="[?] Do you want to attempt to uninstall Go and global aria2c? (y/n): "
+if /i "!UNINSTALL_DEPS!"=="y" (
+    echo [*] Removing global aria2c.exe...
+    del "%SystemRoot%\System32\aria2c.exe" >nul 2>&1
+    
+    echo [*] Uninstalling Go...
+    wmic product where "name like 'Go Programming Language%%'" call uninstall /nointeractive >nul 2>&1
+    echo [ok] Dependencies removed.
+)
 
 echo ======================================
-echo [ok] Uninstall complete! The application has been fully removed.
+echo [ok] Uninstall complete!
 pause

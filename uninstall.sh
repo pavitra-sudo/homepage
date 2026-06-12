@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Error handling
 handle_error() {
     echo "[!] A step encountered an error on line $1. Attempting to continue..."
 }
@@ -43,7 +42,7 @@ fi
 
 echo ""
 echo "[*] Killing any standalone background processes (nohup)..."
-if pkill -f "./homepage" 2>/dev/null; then
+if pkill -f "homepage -port" 2>/dev/null || pkill -f "./homepage" 2>/dev/null; then
     echo "[ok] Standalone background process killed."
 else
     echo "[-] No standalone background process found."
@@ -55,11 +54,30 @@ if [ -f "homepage" ]; then
     rm homepage
     echo "[ok] 'homepage' binary deleted."
 fi
-
 if [ -f "homepage.log" ]; then
     rm homepage.log
-    echo "[ok] 'homepage.log' deleted."
+fi
+
+echo ""
+read -p "[?] Do you want to explicitly uninstall system dependencies (Go, aria2c)? (y/n): " UNINSTALL_DEPS
+if [[ "$UNINSTALL_DEPS" =~ ^[Yy] ]]; then
+    echo "[*] Removing Go from /usr/local/go..."
+    sudo rm -rf /usr/local/go
+    sudo rm -f /usr/local/bin/go /usr/local/bin/gofmt
+    
+    echo "[*] Removing aria2c..."
+    if command -v apt-get &> /dev/null; then
+        sudo apt-get remove -y aria2
+    elif command -v dnf &> /dev/null; then
+        sudo dnf remove -y aria2
+    elif command -v pacman &> /dev/null; then
+        sudo pacman -Rns --noconfirm aria2
+    elif command -v brew &> /dev/null; then
+        brew uninstall aria2
+    fi
+    sudo rm -f /usr/local/bin/aria2c
+    echo "[ok] Dependencies removed."
 fi
 
 echo "======================================"
-echo "[ok] Uninstall complete! The application has been fully removed from background execution."
+echo "[ok] Uninstall complete!"

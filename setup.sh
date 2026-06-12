@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Error handling: Do not exit on error immediately so we can trigger fallbacks
 handle_error() {
     echo "[!] A step encountered an error on line $1. Attempting fallback..."
 }
@@ -10,9 +9,13 @@ echo "======================================"
 echo " Automated Cyber Homepage Setup"
 echo "======================================"
 
-# 1. Check/Install aria2c
+# 1. Ask for Port
+read -p "[?] Enter the port for the server to run on (default: 8088): " APP_PORT
+APP_PORT=${APP_PORT:-8088}
+
+# 2. Check/Install aria2c
 if ! command -v aria2c &> /dev/null; then
-    echo "[*] aria2c could not be found. Attempting to install..."
+    echo "[*] aria2c not found. Installing..."
     if command -v apt-get &> /dev/null; then
         sudo apt-get update && sudo apt-get install -y aria2 || echo "[!] apt-get failed."
     elif command -v dnf &> /dev/null; then
@@ -22,31 +25,40 @@ if ! command -v aria2c &> /dev/null; then
     elif command -v brew &> /dev/null; then
         brew install aria2 || echo "[!] brew failed."
     else
-        echo "[!] Automatic installation failed. Please install aria2c manually: https://aria2.github.io/"
+        echo "[*] Fallback: Downloading aria2c statically..."
+        curl -sL https://github.com/q3aql/aria2-static-builds/releases/download/v1.36.0/aria2-1.36.0-linux-gnu-64bit-build1.tar.bz2 -o /tmp/aria2.tar.bz2
+        tar -xjf /tmp/aria2.tar.bz2 -C /tmp/
+        sudo mv /tmp/aria2-*/aria2c /usr/local/bin/ || echo "[!] Failed to move aria2c to /usr/local/bin"
+        sudo chmod +x /usr/local/bin/aria2c || true
     fi
 else
     echo "[ok] aria2c is already installed."
 fi
 
-# 2. Check/Update Go dependencies
-if command -v go &> /dev/null; then
-    echo "[*] Updating Go modules to the latest versions..."
-    go get -u ./... || true
-    go mod tidy || true
-    
-    echo "[*] Compiling the backend server..."
-    go build -o homepage ./cmd/server || { echo "[x] Build failed."; exit 1; }
+# 3. Check/Install Go
+if ! command -v go &> /dev/null; then
+    echo "[*] Go compiler not found. Downloading and installing Go 1.21.0..."
+    curl -sL https://go.dev/dl/go1.21.0.linux-amd64.tar.gz -o /tmp/go.tar.gz
+    sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf /tmp/go.tar.gz
+    sudo ln -sf /usr/local/go/bin/go /usr/local/bin/go
+    sudo ln -sf /usr/local/go/bin/gofmt /usr/local/bin/gofmt
+    echo "[ok] Go installed."
 else
-    echo "[x] Go compiler is not installed."
-    echo "    Please install Go from https://go.dev/ to compile the backend."
-    exit 1
+    echo "[ok] Go compiler is already installed."
 fi
+
+echo "[*] Updating Go modules to the latest versions..."
+go get -u ./... || true
+go mod tidy || true
+
+echo "[*] Compiling the backend server..."
+go build -o homepage ./cmd/server || { echo "[x] Build failed."; exit 1; }
 
 echo "======================================"
 echo "[ok] Compilation successful."
 echo ""
 
-# 3. Service Creation
+# 4. Service Creation
 read -p "[?] Do you want to install this as an auto-starting background service? (y/n): " INSTALL_SVC
 
 if [[ "$INSTALL_SVC" =~ ^[Yy] ]]; then
@@ -55,12 +67,10 @@ if [[ "$INSTALL_SVC" =~ ^[Yy] ]]; then
 
     USER_NAME=$(whoami)
     APP_DIR=$(pwd)
-    EXEC_PATH="$APP_DIR/homepage"
+    EXEC_PATH="$APP_DIR/homepage -port $APP_PORT"
 
     if command -v systemctl &> /dev/null; then
         echo "[*] Creating systemd service configuration..."
-        
-        # Create the service file in /tmp first
         cat <<EOF > /tmp/${SVC_NAME}.service
 [Unit]
 Description=Cyber Anime Homepage Background Service
@@ -81,37 +91,29 @@ EOF
         echo "[*] Attempting to install system-wide systemd service..."
         if sudo mv /tmp/${SVC_NAME}.service /etc/systemd/system/ 2>/dev/null; then
             sudo systemctl daemon-reload || true
-            sudo systemctl enable ${SVC_NAME} || echo "[!] Failed to enable service at system level."
+            sudo systemctl enable ${SVC_NAME} || echo "[!] Failed to enable system-level service."
             if sudo systemctl start ${SVC_NAME}; then
-                echo "[ok] System service '${SVC_NAME}' successfully installed, enabled, and started!"
+                echo "[ok] System service '${SVC_NAME}' successfully installed and started on port ${APP_PORT}!"
                 exit 0
-            else
-                echo "[!] Failed to start system service. Initiating fallback..."
             fi
         else
-            echo "[!] Sudo privileges unavailable or write failed. Falling back to User-level systemd service..."
-            
+            echo "[!] Sudo unavailable. Falling back to User-level systemd service..."
             mkdir -p ~/.config/systemd/user/
             mv /tmp/${SVC_NAME}.service ~/.config/systemd/user/
-            
             systemctl --user daemon-reload || true
             systemctl --user enable ${SVC_NAME} || echo "[!] Failed to enable user service."
             if systemctl --user start ${SVC_NAME}; then
-                # Linger allows the user service to run even when not logged in
-                loginctl enable-linger ${USER_NAME} 2>/dev/null || echo "[!] Linger could not be enabled, service runs only while logged in."
-                echo "[ok] User service '${SVC_NAME}' successfully installed, enabled, and started!"
+                loginctl enable-linger ${USER_NAME} 2>/dev/null || true
+                echo "[ok] User service '${SVC_NAME}' successfully installed and started on port ${APP_PORT}!"
                 exit 0
-            else
-                echo "[!] Failed to start user service. Initiating final fallback..."
             fi
         fi
     fi
 
-    # Final Fallback: Nohup (if systemctl is missing or failed)
     echo "[*] systemctl is missing or failed. Fallback: Running via nohup in the background..."
-    nohup ${EXEC_PATH} > homepage.log 2>&1 &
-    echo "[ok] Application started in background (PID $!). It will run until you restart your machine."
+    nohup ${APP_DIR}/homepage -port ${APP_PORT} > homepage.log 2>&1 &
+    echo "[ok] Application started in background on port ${APP_PORT} (PID $!)."
 else
     echo "[ok] Setup complete! You can start the server manually by running:"
-    echo "     ./homepage"
+    echo "     ./homepage -port ${APP_PORT}"
 fi

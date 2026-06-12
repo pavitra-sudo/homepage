@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"flag"
 	"log"
 	"net/http"
 
@@ -11,6 +12,9 @@ import (
 )
 
 func main() {
+	port := flag.String("port", "8088", "Port to run the server on")
+	flag.Parse()
+
 	engine := downloader.NewAria2()
 	svc := service.NewDownloadManager(engine)
 	handlers := api.NewHandlers(svc)
@@ -26,13 +30,13 @@ func main() {
 	keyFile := "certificates/key.pem"
 
 	server := &http.Server{
-		Addr: ":8088",
+		Addr: ":" + *port,
 		TLSConfig: &tls.Config{
 			MinVersion: tls.VersionTLS12,
 		},
 	}
 
-	log.Println("Serving at https://localhost:8088")
+	log.Printf("Serving at https://localhost:%s\n", *port)
 
 	err := server.ListenAndServeTLS(certFile, keyFile)
 	if err != nil {

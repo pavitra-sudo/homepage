@@ -1,14 +1,14 @@
 export function initClock() {
   function updateTime() {
     const now = new Date();
-    let h = now.getHours();
-    let m = now.getMinutes();
-    h = h < 10 ? "0" + h : h;
-    m = m < 10 ? "0" + m : m;
-    document.getElementById("time").innerText = `${h}:${m}`;
+    
+    // Explicitly format time for India (IST)
+    const timeOptions = { timeZone: 'Asia/Kolkata', hour12: false, hour: '2-digit', minute: '2-digit' };
+    document.getElementById("time").innerText = now.toLocaleTimeString('en-IN', timeOptions);
   
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById("date").innerText = now.toLocaleDateString(undefined, options);
+    // Explicitly format date for India (IST)
+    const dateOptions = { timeZone: 'Asia/Kolkata', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById("date").innerText = now.toLocaleDateString('en-IN', dateOptions);
   }
   
   setInterval(updateTime, 1000);

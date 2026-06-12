@@ -2,16 +2,32 @@
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
+echo ======================================
+echo  Automated Cyber Homepage Manager
+echo ======================================
 
-echo ======================================
-echo  Automated Cyber Homepage Setup
-echo ======================================
+echo [?] What would you like to do?
+echo     1) Install Setup
+echo     2) Update Application
+echo     3) Uninstall
+set /p ACTION_CHOICE="Enter choice (1, 2, or 3): "
+
+if "!ACTION_CHOICE!"=="1" goto Install
+if "!ACTION_CHOICE!"=="2" goto Update
+if "!ACTION_CHOICE!"=="3" goto Uninstall
+
+echo [!] Unknown choice. Exiting.
+pause
+exit /b 1
+
+:Install
+echo [0%%] Starting installation...
 
 :: 1. Ask for Port
 set /p APP_PORT="[?] Enter the port for the server to run on (default: 8088): "
 if "!APP_PORT!"=="" set APP_PORT=8088
 
-:: 2. Check/Install aria2c
+echo [10%%] Checking/Installing aria2c...
 where aria2c >nul 2>nul
 if %ERRORLEVEL% NEQ 0 (
     echo [*] aria2c not found. Downloading aria2c...
@@ -29,8 +45,9 @@ if %ERRORLEVEL% NEQ 0 (
 ) else (
     echo [ok] aria2c is already installed.
 )
+echo [30%%] aria2c verified.
 
-:: 3. Check/Install Go
+echo [40%%] Checking/Installing Go...
 where go >nul 2>nul
 if %ERRORLEVEL% NEQ 0 (
     echo [*] Go compiler not found. Downloading Go 1.21.0...
@@ -44,36 +61,28 @@ if %ERRORLEVEL% NEQ 0 (
         pause
         exit /b 1
     )
-    echo [ok] Go installed.
-) else (
-    echo [ok] Go compiler is already installed.
 )
+echo [60%%] Go verified.
 
-echo [*] Updating Go modules to the latest versions...
-go get -u ./...
-go mod tidy
-
-echo [*] Compiling the backend server...
+echo [70%%] Compiling the backend server...
+go get -u ./... >nul 2>&1
+go mod tidy >nul 2>&1
 go build -o homepage.exe ./cmd/server
 if %ERRORLEVEL% NEQ 0 (
     echo [x] Build failed!
     pause
     exit /b 1
 )
+echo [80%%] Compiled successfully.
 
-echo ======================================
-echo [ok] Compilation successful.
-echo.
-
-:: 4. Service Creation
 set /p INSTALL_SVC="[?] Do you want to install this as an auto-starting background service? (y/n): "
 if /i "!INSTALL_SVC!"=="y" (
     set /p SVC_NAME="[?] Enter a name for the service (default: CyberHomepage): "
     if "!SVC_NAME!"=="" set SVC_NAME=CyberHomepage
 
-    echo [*] Attempting to create a Scheduled Task for auto-start...
+    echo [90%%] Configuring service...
     
-    :: Create a VBS wrapper to ensure the correct working directory and hide the console window
+    :: Create a VBS wrapper
     set "START_VBS=%CD%\start.vbs"
     echo Set FSO = CreateObject^("Scripting.FileSystemObject"^) > "!START_VBS!"
     echo ScriptDir = FSO.GetParentFolderName^(WScript.ScriptFullName^) >> "!START_VBS!"
@@ -82,19 +91,17 @@ if /i "!INSTALL_SVC!"=="y" (
     echo WshShell.Run "homepage.exe -port !APP_PORT!", 0, False >> "!START_VBS!"
 
     schtasks /create /tn "!SVC_NAME!" /tr "wscript.exe \"!START_VBS!\"" /sc onlogon /rl highest /f >nul 2>&1
-    
-    :: Modify the task to ensure it runs even on battery power
-    powershell -Command "$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries; Set-ScheduledTask -TaskName '!SVC_NAME!' -Settings $settings" >nul 2>&1
+    powershell -Command "$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit 0; Set-ScheduledTask -TaskName '!SVC_NAME!' -Settings $settings" >nul 2>&1
 
     if !ERRORLEVEL! EQU 0 (
-        echo [ok] Scheduled task created. It will start automatically on logon.
-        echo [*] Starting the service now...
+        echo [ok] Scheduled task created.
         schtasks /run /tn "!SVC_NAME!" >nul 2>&1
         if !ERRORLEVEL! EQU 0 (
-            echo [ok] Service started successfully on port !APP_PORT!!
+            echo [100%%] Service started successfully on port !APP_PORT!!
         ) else (
-            echo [!] Failed to start the task immediately. Fallback: Starting manually...
+            echo [!] Failed to start task. Starting manually...
             start "" "%CD%\homepage.exe" -port !APP_PORT!
+            echo [100%%] Started.
         )
     ) else (
         echo [!] Administrator privileges required for Scheduled Tasks. 
@@ -114,17 +121,118 @@ if /i "!INSTALL_SVC!"=="y" (
         cscript /nologo "!VBS_SCRIPT!"
         del "!VBS_SCRIPT!"
         
-        echo [ok] Startup shortcut created successfully.
-        
-        echo [*] Starting the application now...
         start "" "%CD%\homepage.exe" -port !APP_PORT!
+        echo [100%%] Startup shortcut created and app started.
     )
-    
-    echo ======================================
-    echo [ok] Service setup complete!
 ) else (
-    echo [ok] Setup complete! You can start the server manually by running:
-    echo      homepage.exe -port !APP_PORT!
+    echo [100%%] Setup complete! You can start the server manually by running:
+    echo        homepage.exe -port !APP_PORT!
+)
+pause
+exit /b 0
+
+:Update
+echo [0%%] Starting update...
+
+echo [20%%] Pulling latest code...
+git pull
+
+echo [40%%] Updating dependencies...
+go get -u ./... >nul 2>&1
+go mod tidy >nul 2>&1
+
+echo [60%%] Recompiling binary...
+go build -o homepage.exe ./cmd/server
+if %ERRORLEVEL% NEQ 0 (
+    echo [x] Build failed!
+    pause
+    exit /b 1
+)
+echo [80%%] Recompiled successfully.
+
+echo [90%%] Restarting background service if it exists...
+set "SVC_NAME=CyberHomepage"
+schtasks /query /tn "!SVC_NAME!" >nul 2>&1
+if !ERRORLEVEL! EQU 0 (
+    schtasks /end /tn "!SVC_NAME!" >nul 2>&1
+    schtasks /run /tn "!SVC_NAME!" >nul 2>&1
+    echo [ok] Scheduled Task '!SVC_NAME!' restarted.
+) else (
+    :: Try to kill and rely on startup shortcut next boot, or just restart if it was running standalone
+    taskkill /F /IM homepage.exe >nul 2>&1
+    start "" "%CD%\homepage.exe" -port 8088
+    echo [ok] Background process restarted.
 )
 
+echo [100%%] Update complete!
 pause
+exit /b 0
+
+:Uninstall
+echo ======================================
+echo  Automated Cyber Homepage Uninstall
+echo ======================================
+
+set /p SVC_NAME="[?] Enter the name of the service you used during setup (default: CyberHomepage): "
+if "!SVC_NAME!"=="" set SVC_NAME=CyberHomepage
+echo.
+
+echo [*] Attempting to stop and remove Scheduled Task...
+schtasks /query /tn "!SVC_NAME!" >nul 2>&1
+if !ERRORLEVEL! EQU 0 (
+    schtasks /end /tn "!SVC_NAME!" >nul 2>&1
+    schtasks /delete /tn "!SVC_NAME!" /f >nul 2>&1
+    echo [ok] Scheduled Task '!SVC_NAME!' removed.
+) else (
+    echo [-] Scheduled Task not found.
+)
+echo.
+
+echo [*] Attempting to remove Startup shortcut...
+set "STARTUP_DIR=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"
+if exist "!STARTUP_DIR!\!SVC_NAME!.lnk" (
+    del "!STARTUP_DIR!\!SVC_NAME!.lnk"
+    echo [ok] Startup shortcut removed.
+) else (
+    echo [-] Startup shortcut not found.
+)
+echo.
+
+echo [*] Killing any running homepage.exe processes...
+taskkill /F /IM homepage.exe >nul 2>&1
+if !ERRORLEVEL! EQU 0 (
+    echo [ok] Background processes terminated.
+) else (
+    echo [-] No background process found running.
+)
+echo.
+
+echo [*] Removing built binaries...
+if exist "homepage.exe" (
+    del homepage.exe
+    echo [ok] 'homepage.exe' deleted.
+)
+if exist "aria2c.exe" (
+    del aria2c.exe
+    echo [ok] Local 'aria2c.exe' deleted.
+)
+if exist "start.vbs" (
+    del start.vbs
+    echo [ok] 'start.vbs' wrapper deleted.
+)
+
+echo.
+set /p UNINSTALL_DEPS="[?] Do you want to explicitly uninstall Go and global aria2c? (y/n): "
+if /i "!UNINSTALL_DEPS!"=="y" (
+    echo [*] Removing global aria2c.exe...
+    del "%SystemRoot%\System32\aria2c.exe" >nul 2>&1
+    
+    echo [*] Uninstalling Go...
+    wmic product where "name like 'Go Programming Language%%'" call uninstall /nointeractive >nul 2>&1
+    echo [ok] Dependencies removed.
+)
+
+echo ======================================
+echo [ok] Uninstall complete!
+pause
+exit /b 0

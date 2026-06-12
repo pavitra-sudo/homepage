@@ -18,27 +18,32 @@ To run this dashboard, your system must have the following dependencies installe
 
 ## Installation & Setup
 
-We have provided automated setup scripts for both Linux/macOS and Windows to automatically install dependencies, update Go modules to their latest versions, and compile the backend.
+We have provided robust automated setup scripts for both Linux/macOS and Windows. These scripts will automatically install dependencies (Go and Aria2), compile the backend server, and optionally configure the application to run silently in the background on system startup.
 
 ### For Linux / macOS
 1. Open your terminal and navigate to the project directory.
-2. Make the script executable:
+2. Make the scripts executable:
    ```bash
-   chmod +x setup.sh
+   chmod +x setup.sh uninstall.sh
    ```
-3. Run the script:
+3. Run the setup script:
    ```bash
    ./setup.sh
    ```
-   *Note: This script will attempt to install or upgrade `aria2` using your system's package manager (`apt`, `dnf`, `pacman`, or `brew`) if you have `sudo` privileges.*
+   *Note: This script installs or upgrades dependencies and will ask if you want to install the server as a **User-level systemd service** (`systemctl --user`), which enables it to start automatically on boot.*
 
 ### For Windows
-1. Open Command Prompt or PowerShell and navigate to the project directory.
+1. Open Command Prompt or PowerShell as Administrator (recommended for global dependency installation) and navigate to the project directory.
 2. Run the batch script:
    ```cmd
    setup.bat
    ```
-   *Note: On Windows, you will need to install `aria2` manually from their [releases page](https://github.com/aria2/aria2/releases) and ensure `aria2c.exe` is added to your Environment Variables PATH.*
+   *Note: This script will automatically download `aria2c` and `Go` for Windows if you don't have them. It will also ask if you want to create a **Windows Scheduled Task** to run the server silently in the background whenever you log in.*
+
+### Uninstallation
+If you need to remove the auto-starting services and clean up compiled binaries, simply run the corresponding uninstall script:
+*   **Linux/macOS**: `./uninstall.sh`
+*   **Windows**: `uninstall.bat`
 
 ## Running the Dashboard
 

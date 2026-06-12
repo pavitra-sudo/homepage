@@ -4,15 +4,24 @@ import (
 	"crypto/tls"
 	"log"
 	"net/http"
+
+	"homepage/internal/api"
+	"homepage/internal/downloader"
+	"homepage/internal/service"
 )
 
 func main() {
-	// Serve current directory (like SimpleHTTPRequestHandler)
-	fs := http.FileServer(http.Dir("."))
+	engine := downloader.NewAria2()
+	svc := service.NewDownloadManager(engine)
+	handlers := api.NewHandlers(svc)
 
+	http.HandleFunc("/api/downloads", handlers.HandleDownloadsAPI)
+	http.HandleFunc("/api/downloads/metadata", handlers.HandleMetadataAPI)
+
+	// Serve the public folder
+	fs := http.FileServer(http.Dir("public"))
 	http.Handle("/", fs)
 
-	// Load TLS certificate
 	certFile := "certificates/cert.pem"
 	keyFile := "certificates/key.pem"
 

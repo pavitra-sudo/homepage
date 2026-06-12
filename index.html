@@ -126,6 +126,30 @@
     </div>
   </div>
 
+  <!-- QR Generator Modal -->
+  <div class="modal-overlay" id="qr-overlay">
+    <div class="modal-content qr-modal-content">
+      <div class="modal-header">
+        <div class="modal-title">QR Generator</div>
+        <button class="modal-close" id="qr-close">&times;</button>
+      </div>
+      <div class="qr-container" id="qr-container">
+        <div class="add-link-form" style="max-height: none; padding-top: 1.5rem; opacity: 1;">
+          <input type="text" id="qr-input" placeholder="Enter text or URL..." autocomplete="off">
+          <button id="qr-generate-btn">Generate QR</button>
+        </div>
+        <div id="qr-result-container" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 2rem; min-height: 200px; gap: 1rem;">
+          <div class="loading-text" id="qr-placeholder" style="padding: 0;">Awaiting Data...</div>
+          <img id="qr-image" style="display: none; width: 200px; height: 200px; border-radius: 8px; box-shadow: 0 0 20px rgba(255,0,60,0.3);" crossorigin="anonymous" />
+          <button id="qr-download-btn" style="display: none; background: rgba(255, 0, 60, 0.1); border: 1px solid var(--accent-red); color: white; border-radius: 6px; padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; transition: all 0.3s ease;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 0.3rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Download
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Quick Links Modal -->
   <div class="modal-overlay" id="quicklinks-overlay">
     <div class="modal-content quicklinks-modal-content">

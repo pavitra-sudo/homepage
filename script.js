@@ -270,6 +270,16 @@ const tools = [
       inventoryOverlay.classList.remove('active');
       spotifyOverlay.classList.add('active');
     }
+  },
+  {
+    id: 'qrgenerator',
+    label: 'QR Generator',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="3" height="3"></rect><rect x="14" y="7" width="3" height="3"></rect><rect x="7" y="14" width="3" height="3"></rect><rect x="14" y="14" width="3" height="3"></rect></svg>',
+    action: () => {
+      inventoryOverlay.classList.remove('active');
+      document.getElementById('qr-overlay').classList.add('active');
+      setTimeout(() => document.getElementById('qr-input').focus(), 100);
+    }
   }
 ];
 
@@ -680,5 +690,61 @@ qlSubmitBtn.addEventListener('click', () => {
     qlUrlInput.value = '';
     addLinkForm.classList.add('hidden');
     renderQuickLinks();
+  }
+});
+
+// ── QR Generator Logic ──
+const qrOverlay = document.getElementById('qr-overlay');
+const qrClose = document.getElementById('qr-close');
+const qrInput = document.getElementById('qr-input');
+const qrGenerateBtn = document.getElementById('qr-generate-btn');
+const qrImage = document.getElementById('qr-image');
+const qrPlaceholder = document.getElementById('qr-placeholder');
+const qrDownloadBtn = document.getElementById('qr-download-btn');
+
+qrClose.addEventListener('click', () => {
+  qrOverlay.classList.remove('active');
+});
+
+qrOverlay.addEventListener('click', (e) => {
+  if (e.target === qrOverlay) qrOverlay.classList.remove('active');
+});
+
+qrGenerateBtn.addEventListener('click', () => {
+  const text = qrInput.value.trim();
+  if (text) {
+    qrPlaceholder.style.display = 'none';
+    qrImage.style.display = 'block';
+    qrDownloadBtn.style.display = 'block';
+    qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(text)}&color=000000&bgcolor=ffffff`;
+  } else {
+    qrPlaceholder.style.display = 'block';
+    qrImage.style.display = 'none';
+    qrDownloadBtn.style.display = 'none';
+  }
+});
+
+qrDownloadBtn.addEventListener('click', async () => {
+  try {
+    const res = await fetch(qrImage.src);
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = 'qrcode.png';
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    a.remove();
+  } catch (err) {
+    console.error('Error downloading QR code:', err);
+    window.open(qrImage.src, '_blank');
+  }
+});
+
+qrInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') {
+    qrGenerateBtn.click();
   }
 });

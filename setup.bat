@@ -83,6 +83,9 @@ if /i "!INSTALL_SVC!"=="y" (
 
     schtasks /create /tn "!SVC_NAME!" /tr "wscript.exe \"!START_VBS!\"" /sc onlogon /rl highest /f >nul 2>&1
     
+    :: Modify the task to ensure it runs even on battery power
+    powershell -Command "$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries; Set-ScheduledTask -TaskName '!SVC_NAME!' -Settings $settings" >nul 2>&1
+
     if !ERRORLEVEL! EQU 0 (
         echo [ok] Scheduled task created. It will start automatically on logon.
         echo [*] Starting the service now...

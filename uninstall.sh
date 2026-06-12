@@ -1,4 +1,5 @@
 #!/bin/bash
+cd "$(dirname "$0")" || exit 1
 
 handle_error() {
     echo "[!] A step encountered an error on line $1. Attempting to continue..."

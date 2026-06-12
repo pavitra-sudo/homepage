@@ -1,5 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
+cd /d "%~dp0"
+
 
 echo ======================================
 echo  Automated Cyber Homepage Uninstall
@@ -47,6 +49,10 @@ if exist "homepage.exe" (
 if exist "aria2c.exe" (
     del aria2c.exe
     echo [ok] Local 'aria2c.exe' deleted.
+)
+if exist "start.vbs" (
+    del start.vbs
+    echo [ok] 'start.vbs' wrapper deleted.
 )
 
 echo.

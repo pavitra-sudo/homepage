@@ -71,7 +71,7 @@ if [[ "$INSTALL_SVC" =~ ^[Yy] ]]; then
     EXEC_PATH="$APP_DIR/homepage -port $APP_PORT"
 
     if command -v systemctl &> /dev/null; then
-        echo "[*] Creating systemd service configuration..."
+        echo "[*] Creating User-level systemd service configuration (to avoid SELinux home directory restrictions)..."
         cat <<EOF > /tmp/${SVC_NAME}.service
 [Unit]
 Description=Cyber Anime Homepage Background Service
@@ -79,35 +79,26 @@ After=network.target
 
 [Service]
 Type=simple
-User=${USER_NAME}
 WorkingDirectory=${APP_DIR}
 ExecStart=${EXEC_PATH}
 Restart=always
 RestartSec=5
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
 EOF
 
-        echo "[*] Attempting to install system-wide systemd service..."
-        if sudo mv /tmp/${SVC_NAME}.service /etc/systemd/system/ 2>/dev/null; then
-            sudo systemctl daemon-reload || true
-            sudo systemctl enable ${SVC_NAME} || echo "[!] Failed to enable system-level service."
-            if sudo systemctl start ${SVC_NAME}; then
-                echo "[ok] System service '${SVC_NAME}' successfully installed and started on port ${APP_PORT}!"
-                exit 0
-            fi
+        mkdir -p ~/.config/systemd/user/
+        mv /tmp/${SVC_NAME}.service ~/.config/systemd/user/
+        systemctl --user daemon-reload || true
+        systemctl --user enable ${SVC_NAME} || echo "[!] Failed to enable user service."
+        
+        if systemctl --user start ${SVC_NAME}; then
+            loginctl enable-linger ${USER_NAME} 2>/dev/null || true
+            echo "[ok] User service '${SVC_NAME}' successfully installed and started on port ${APP_PORT}!"
+            exit 0
         else
-            echo "[!] Sudo unavailable. Falling back to User-level systemd service..."
-            mkdir -p ~/.config/systemd/user/
-            mv /tmp/${SVC_NAME}.service ~/.config/systemd/user/
-            systemctl --user daemon-reload || true
-            systemctl --user enable ${SVC_NAME} || echo "[!] Failed to enable user service."
-            if systemctl --user start ${SVC_NAME}; then
-                loginctl enable-linger ${USER_NAME} 2>/dev/null || true
-                echo "[ok] User service '${SVC_NAME}' successfully installed and started on port ${APP_PORT}!"
-                exit 0
-            fi
+            echo "[!] Failed to start user service."
         fi
     fi
 

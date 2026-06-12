@@ -108,5 +108,6 @@ export function initQuickLinks() {
     });
   }
 
+  renderQuickLinks();
   return renderQuickLinks;
 }

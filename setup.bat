@@ -1,5 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
+cd /d "%~dp0"
+
 
 echo ======================================
 echo  Automated Cyber Homepage Setup
@@ -70,7 +72,14 @@ if /i "!INSTALL_SVC!"=="y" (
     if "!SVC_NAME!"=="" set SVC_NAME=CyberHomepage
 
     echo [*] Attempting to create a Scheduled Task for auto-start...
-    schtasks /create /tn "!SVC_NAME!" /tr "%CD%\homepage.exe -port !APP_PORT!" /sc onlogon /rl highest /f >nul 2>&1
+    
+    :: Create a VBS wrapper to ensure the correct working directory and hide the console window
+    set "START_VBS=%CD%\start.vbs"
+    echo Set WshShell = CreateObject^("WScript.Shell"^) > "!START_VBS!"
+    echo WshShell.CurrentDirectory = "%CD%" >> "!START_VBS!"
+    echo WshShell.Run "homepage.exe -port !APP_PORT!", 0, False >> "!START_VBS!"
+
+    schtasks /create /tn "!SVC_NAME!" /tr "wscript.exe \"!START_VBS!\"" /sc onlogon /rl highest /f >nul 2>&1
     
     if !ERRORLEVEL! EQU 0 (
         echo [ok] Scheduled task created. It will start automatically on logon.

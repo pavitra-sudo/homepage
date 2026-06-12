@@ -15,7 +15,7 @@ setInterval(updateTime, 1000);
 updateTime();
 
 // ── Configuration Loading ──
-window.appConfig = { spotifyUri: null };
+window.appConfig = { spotifyUri: null, animeApiEndpoint: "https://api.jikan.moe/v4/schedules" };
 
 async function loadConfigs() {
   try {
@@ -33,7 +33,7 @@ async function loadConfigs() {
     }
 
     // 2. Media Config
-    const mediaRes = await fetch('config/media.json');
+    const mediaRes = await fetch('config/inventory/spotifystream.json');
     if (mediaRes.ok) {
       const mediaConfig = await mediaRes.json();
       window.appConfig.spotifyUri = mediaConfig.spotify_uri;
@@ -41,7 +41,7 @@ async function loadConfigs() {
 
     // 3. Quick Links Defaults
     if (!localStorage.getItem('saved_quicklinks')) {
-      const qlRes = await fetch('config/quicklinks.json');
+      const qlRes = await fetch('config/inventory/quicklinks.json');
       if (qlRes.ok) {
         const defaultLinks = await qlRes.json();
         localStorage.setItem('saved_quicklinks', JSON.stringify(defaultLinks));
@@ -66,6 +66,15 @@ async function loadConfigs() {
           bgVideoSrc.src = uiConfig.bg_video;
           bgVideo.load();
         }
+      }
+    }
+
+    // 5. Anime Schedule Config
+    const animeRes = await fetch('config/inventory/animeschedular.json');
+    if (animeRes.ok) {
+      const animeConfig = await animeRes.json();
+      if (animeConfig.api_endpoint) {
+        window.appConfig.animeApiEndpoint = animeConfig.api_endpoint;
       }
     }
   } catch (err) {
@@ -448,7 +457,7 @@ async function fetchSchedule() {
   }
 
   try {
-    const res = await fetch(`https://api.jikan.moe/v4/schedules?filter=${day}`);
+    const res = await fetch(`${window.appConfig.animeApiEndpoint}?filter=${day}`);
     const data = await res.json();
     
     if (data.data && data.data.length > 0) {

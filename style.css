@@ -406,7 +406,7 @@ html {
 .inventory-grid {
   padding: 1.5rem;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
 }
 
@@ -838,4 +838,100 @@ html {
 .add-link-form button:hover {
   background: #ff1a4f;
   box-shadow: 0 0 10px rgba(255, 0, 60, 0.5);
+}
+
+/* --- Download Manager Specifics --- */
+.downloads-list {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.downloads-list::-webkit-scrollbar {
+  width: 6px;
+}
+.downloads-list::-webkit-scrollbar-thumb {
+  background: var(--accent-red);
+  border-radius: 3px;
+}
+
+.dl-item {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: border-color 0.3s ease;
+}
+
+.dl-item.completed {
+  border-color: #00ff66;
+}
+
+.dl-item.error {
+  border-color: var(--accent-red);
+}
+
+.dl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: white;
+}
+
+.dl-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70%;
+}
+
+.dl-status {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.dl-item.completed .dl-status {
+  color: #00ff66;
+}
+
+.dl-item.error .dl-status {
+  color: var(--accent-red);
+}
+
+.dl-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.dl-progress-fill {
+  height: 100%;
+  background: var(--accent-red);
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.dl-item.completed .dl-progress-fill {
+  background: #00ff66;
+  width: 100%;
+}
+
+.dl-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-family: monospace;
 }

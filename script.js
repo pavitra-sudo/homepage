@@ -14,6 +14,66 @@ function updateTime() {
 setInterval(updateTime, 1000);
 updateTime();
 
+// ── Configuration Loading ──
+window.appConfig = { spotifyUri: null };
+
+async function loadConfigs() {
+  try {
+    // 1. Search Config
+    const searchRes = await fetch('config/search.json');
+    if (searchRes.ok) {
+      const searchConfig = await searchRes.json();
+      const form = document.getElementById('search-form');
+      const input = document.getElementById('search-input');
+      if (form && input) {
+        form.action = searchConfig.engine;
+        input.name = searchConfig.param;
+        input.placeholder = searchConfig.placeholder;
+      }
+    }
+
+    // 2. Media Config
+    const mediaRes = await fetch('config/media.json');
+    if (mediaRes.ok) {
+      const mediaConfig = await mediaRes.json();
+      window.appConfig.spotifyUri = mediaConfig.spotify_uri;
+    }
+
+    // 3. Quick Links Defaults
+    if (!localStorage.getItem('saved_quicklinks')) {
+      const qlRes = await fetch('config/quicklinks.json');
+      if (qlRes.ok) {
+        const defaultLinks = await qlRes.json();
+        localStorage.setItem('saved_quicklinks', JSON.stringify(defaultLinks));
+        savedQuicklinks = defaultLinks;
+        if (typeof renderQuickLinks === 'function') renderQuickLinks();
+      }
+    }
+
+    // 4. UI Config (Background & Icon)
+    const uiRes = await fetch('config/ui.json');
+    if (uiRes.ok) {
+      const uiConfig = await uiRes.json();
+      const tabIcon = document.getElementById('tab-icon');
+      if (tabIcon && uiConfig.tab_icon) {
+        tabIcon.href = uiConfig.tab_icon;
+      }
+      
+      const bgVideoSrc = document.getElementById('bg-video-src');
+      const bgVideo = document.getElementById('bg-video');
+      if (bgVideoSrc && bgVideo && uiConfig.bg_video) {
+        if (!bgVideoSrc.src.endsWith(uiConfig.bg_video)) {
+          bgVideoSrc.src = uiConfig.bg_video;
+          bgVideo.load();
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Failed to load modular configs", err);
+  }
+}
+loadConfigs();
+
 // ── Cursor Trail: Glowing Red Particles ──
 const canvas = document.getElementById("cursor-canvas");
 const ctx = canvas.getContext("2d");
@@ -164,6 +224,24 @@ const scheduleContainer = document.getElementById('schedule-container');
 
 // Tool Registry
 const tools = [
+  {
+    id: 'quicklinks',
+    label: 'Quick Links',
+    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>',
+    action: () => {
+      inventoryOverlay.classList.remove('active');
+      document.getElementById('quicklinks-overlay').classList.add('active');
+      
+      // Reset edit mode when opening
+      qlEditMode = false;
+      document.getElementById('quicklinks-container').classList.remove('edit-mode');
+      document.getElementById('edit-quicklinks-btn').classList.remove('active');
+      document.getElementById('add-quicklink-btn').style.display = 'none';
+      document.getElementById('add-link-form').classList.add('hidden');
+      
+      renderQuickLinks();
+    }
+  },
   {
     id: 'schedule',
     label: 'Anime Schedule',
@@ -446,7 +524,7 @@ window.onSpotifyIframeApiReady = (IFrameAPI) => {
   const options = {
     width: '100%',
     height: '352',
-    uri: 'spotify:playlist:16SjqfOmAiWIFoiC3elUwT'
+    uri: window.appConfig.spotifyUri || 'spotify:playlist:16SjqfOmAiWIFoiC3elUwT'
   };
   const callback = (EmbedController) => {
     EmbedController.addListener('playback_update', e => {
@@ -481,3 +559,117 @@ window.onSpotifyIframeApiReady = (IFrameAPI) => {
   };
   IFrameAPI.createController(element, options, callback);
 };
+
+// ── Quick Links Logic ──
+const quicklinksOverlay = document.getElementById('quicklinks-overlay');
+const quicklinksClose = document.getElementById('quicklinks-close');
+const editQuicklinksBtn = document.getElementById('edit-quicklinks-btn');
+const addQuicklinkBtn = document.getElementById('add-quicklink-btn');
+const addLinkForm = document.getElementById('add-link-form');
+const qlSubmitBtn = document.getElementById('ql-submit-btn');
+const qlNameInput = document.getElementById('ql-name');
+const qlUrlInput = document.getElementById('ql-url');
+const quicklinksContainer = document.getElementById('quicklinks-container');
+
+let qlEditMode = false;
+
+let savedQuicklinks = JSON.parse(localStorage.getItem('saved_quicklinks')) || [];
+
+function renderQuickLinks() {
+  quicklinksContainer.innerHTML = '';
+  savedQuicklinks.forEach((link, index) => {
+    const item = document.createElement('div');
+    item.className = 'quicklink-item';
+    
+    // Simple way to get a domain from a URL to fetch favicon
+    let domain = '';
+    try {
+      domain = new URL(link.url).hostname;
+    } catch(e) {
+      domain = link.url;
+    }
+    
+    const iconUrl = `https://icons.duckduckgo.com/ip3/${domain}.ico`;
+    
+    item.innerHTML = `
+      <a href="${link.url}" class="quicklink-icon" target="_blank" rel="noopener noreferrer">
+        <img src="${iconUrl}" alt="${link.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌐</text></svg>'">
+      </a>
+      <div class="quicklink-label">${link.name}</div>
+      <div class="quicklink-delete" data-index="${index}">&times;</div>
+    `;
+    
+    quicklinksContainer.appendChild(item);
+  });
+
+  // Attach delete listeners
+  document.querySelectorAll('.quicklink-delete').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      const idx = e.target.getAttribute('data-index');
+      savedQuicklinks.splice(idx, 1);
+      localStorage.setItem('saved_quicklinks', JSON.stringify(savedQuicklinks));
+      renderQuickLinks();
+    });
+  });
+}
+
+editQuicklinksBtn.addEventListener('click', () => {
+  qlEditMode = !qlEditMode;
+  if (qlEditMode) {
+    quicklinksContainer.classList.add('edit-mode');
+    editQuicklinksBtn.classList.add('active');
+    addQuicklinkBtn.style.display = 'flex';
+  } else {
+    quicklinksContainer.classList.remove('edit-mode');
+    editQuicklinksBtn.classList.remove('active');
+    addQuicklinkBtn.style.display = 'none';
+    addLinkForm.classList.add('hidden');
+  }
+});
+
+quicklinksClose.addEventListener('click', () => {
+  quicklinksOverlay.classList.remove('active');
+  // Reset form and edit state when closed
+  qlEditMode = false;
+  quicklinksContainer.classList.remove('edit-mode');
+  editQuicklinksBtn.classList.remove('active');
+  addQuicklinkBtn.style.display = 'none';
+  addLinkForm.classList.add('hidden'); 
+});
+
+quicklinksOverlay.addEventListener('click', (e) => {
+  if (e.target === quicklinksOverlay) {
+    quicklinksOverlay.classList.remove('active');
+    qlEditMode = false;
+    quicklinksContainer.classList.remove('edit-mode');
+    editQuicklinksBtn.classList.remove('active');
+    addQuicklinkBtn.style.display = 'none';
+    addLinkForm.classList.add('hidden');
+  }
+});
+
+addQuicklinkBtn.addEventListener('click', () => {
+  addLinkForm.classList.toggle('hidden');
+  if(!addLinkForm.classList.contains('hidden')) {
+    qlNameInput.focus();
+  }
+});
+
+qlSubmitBtn.addEventListener('click', () => {
+  const name = qlNameInput.value.trim();
+  let url = qlUrlInput.value.trim();
+  
+  if (name && url) {
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://' + url;
+    }
+    savedQuicklinks.push({ name, url });
+    localStorage.setItem('saved_quicklinks', JSON.stringify(savedQuicklinks));
+    qlNameInput.value = '';
+    qlUrlInput.value = '';
+    addLinkForm.classList.add('hidden');
+    renderQuickLinks();
+  }
+});

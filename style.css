@@ -685,3 +685,157 @@ html {
     bottom: 2rem;
   }
 }
+
+/* --- Quick Links Specifics --- */
+.quicklinks-container {
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 1.5rem;
+  overflow-y: auto;
+  max-height: 50vh;
+}
+
+.quicklinks-container::-webkit-scrollbar {
+  width: 6px;
+}
+.quicklinks-container::-webkit-scrollbar-thumb {
+  background: var(--accent-red);
+  border-radius: 3px;
+}
+
+.quicklink-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: white;
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.quicklink-item:hover {
+  transform: translateY(-4px);
+}
+
+.quicklink-icon {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  transition: all 0.3s ease;
+}
+
+.quicklink-item:hover .quicklink-icon {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-red);
+  box-shadow: 0 5px 15px rgba(255, 0, 60, 0.2);
+}
+
+.quicklink-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.quicklink-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.quicklink-delete {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  background: var(--accent-red);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 2;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+  pointer-events: none;
+  transform: scale(0.8);
+}
+
+.quicklinks-container.edit-mode .quicklink-delete {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1);
+}
+
+.quicklinks-container.edit-mode .quicklink-icon {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Add Link Form */
+.add-link-form {
+  padding: 1.5rem 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 1.5rem;
+  transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+  overflow: hidden;
+  max-height: 200px;
+  opacity: 1;
+}
+
+.add-link-form.hidden {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.add-link-form input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  padding: 0.6rem 1rem;
+  color: white;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.add-link-form input:focus {
+  border-color: var(--accent-red);
+}
+
+.add-link-form button {
+  background: var(--accent-red);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.add-link-form button:hover {
+  background: #ff1a4f;
+  box-shadow: 0 0 10px rgba(255, 0, 60, 0.5);
+}

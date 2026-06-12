@@ -160,7 +160,10 @@
       <div class="downloader-container" id="downloader-container">
         <div class="add-link-form" style="max-height: none; padding-top: 1.5rem; opacity: 1;">
           <input type="text" id="dl-url" placeholder="Magnet link only..." autocomplete="off">
-          <input type="text" id="dl-dir" placeholder="Save directory (default: downloads)" autocomplete="off" style="margin-top: 0.5rem;">
+          <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+            <input type="text" id="dl-dir" placeholder="Save directory (default: downloads)" autocomplete="off" style="flex: 1; margin: 0;">
+            <button id="dl-browse-btn" style="padding: 0 1rem; background: var(--surface-light); border: 1px solid rgba(255, 255, 255, 0.1);">Browse</button>
+          </div>
           <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
             <button id="dl-fetch-btn" style="flex: 1; background: var(--surface-light); border: 1px solid rgba(255, 255, 255, 0.1);">Fetch Metadata</button>
             <button id="dl-start-btn" style="flex: 1;" disabled>Start Download</button>

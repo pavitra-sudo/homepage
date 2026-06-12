@@ -5,6 +5,8 @@ import (
 	"homepage/internal/core"
 	"net/http"
 	"os"
+	"os/exec"
+	"runtime"
 	"strings"
 )
 
@@ -95,4 +97,25 @@ func (h *Handlers) HandleMetadataAPI(w http.ResponseWriter, r *http.Request) {
 		"torrent_file": torrentFile,
 		"files":        files,
 	})
+}
+
+func (h *Handlers) HandleFsNativePickerAPI(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var pathStr string
+	if runtime.GOOS == "windows" {
+		cmd := exec.Command("powershell", "-NoProfile", "-Command", "& {Add-Type -AssemblyName System.Windows.Forms; $f = New-Object System.Windows.Forms.FolderBrowserDialog; if($f.ShowDialog() -eq 'OK'){ $f.SelectedPath }}")
+		out, _ := cmd.Output()
+		pathStr = strings.TrimSpace(string(out))
+	} else {
+		cmd := exec.Command("zenity", "--file-selection", "--directory", "--title=Select Download Directory")
+		out, _ := cmd.Output()
+		pathStr = strings.TrimSpace(string(out))
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"path": pathStr})
 }

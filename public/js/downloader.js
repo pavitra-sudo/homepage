@@ -9,6 +9,7 @@ export function initDownloader() {
   const dlFetchBtn = document.getElementById('dl-fetch-btn');
   const dlSelectFilesContainer = document.getElementById('dl-select-files-container');
   const dlList = document.getElementById('downloads-list');
+  const dlBrowseBtn = document.getElementById('dl-browse-btn');
 
   dlClose.addEventListener('click', () => {
     dlOverlay.classList.remove('active');
@@ -97,6 +98,21 @@ export function initDownloader() {
       console.error(err);
     }
   };
+
+  dlBrowseBtn.addEventListener('click', async () => {
+    dlBrowseBtn.innerText = '...';
+    try {
+      const res = await fetch('/api/fs/native-picker');
+      const data = await res.json();
+      if (data.path) {
+        dlDir.value = data.path;
+      }
+    } catch (err) {
+      console.error('Failed to open native picker:', err);
+    } finally {
+      dlBrowseBtn.innerText = 'Browse';
+    }
+  });
 
   setInterval(async () => {
     if (!dlOverlay.classList.contains('active')) return;

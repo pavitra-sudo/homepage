@@ -935,3 +935,29 @@ html {
   color: var(--text-secondary);
   font-family: monospace;
 }
+
+/* Directory Browser */
+.dir-list::-webkit-scrollbar {
+  width: 6px;
+}
+.dir-list::-webkit-scrollbar-thumb {
+  background: var(--accent-red);
+  border-radius: 3px;
+}
+.dir-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--glass-border);
+  transition: all 0.2s ease;
+  color: var(--text-secondary);
+}
+.dir-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--accent-red);
+}
+.dir-item svg {
+  min-width: 16px;
+}

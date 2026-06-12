@@ -21,6 +21,7 @@ func main() {
 
 	http.HandleFunc("/api/downloads", handlers.HandleDownloadsAPI)
 	http.HandleFunc("/api/downloads/metadata", handlers.HandleMetadataAPI)
+	http.HandleFunc("/api/fs/native-picker", handlers.HandleFsNativePickerAPI)
 
 	// Serve the public folder
 	fs := http.FileServer(http.Dir("public"))

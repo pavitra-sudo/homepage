@@ -10,6 +10,7 @@ export function initDownloader() {
   const dlSelectFilesContainer = document.getElementById('dl-select-files-container');
   const dlList = document.getElementById('downloads-list');
   const dlBrowseBtn = document.getElementById('dl-browse-btn');
+  const dlActiveWidget = document.getElementById('dl-active-widget');
 
   dlClose.addEventListener('click', () => {
     dlOverlay.classList.remove('active');
@@ -115,11 +116,45 @@ export function initDownloader() {
   });
 
   setInterval(async () => {
-    if (!dlOverlay.classList.contains('active')) return;
-    
     try {
       const res = await fetch('/api/downloads');
       const data = await res.json();
+      
+      // Update global floating widget
+      if (!data || data.length === 0) {
+        dlActiveWidget.classList.remove('active');
+      } else {
+        const displayData = data.slice(0, 3);
+        dlActiveWidget.innerHTML = '';
+        let hasActive = false;
+        
+        displayData.forEach(dl => {
+          if (dl.status === 'removed') return;
+          hasActive = true;
+          const fileName = dl.name || dl.url.split('/').pop() || dl.id;
+          const progress = dl.progress || '0%';
+          const isComplete = dl.status === 'complete';
+          
+          const item = document.createElement('div');
+          item.className = 'dl-aw-item';
+          item.innerHTML = `
+            <div class="dl-aw-title" title="${fileName}">${fileName}</div>
+            <div class="dl-aw-progress-bg">
+              <div class="dl-aw-progress-fill ${isComplete ? 'complete' : ''}" style="width: ${progress}"></div>
+            </div>
+          `;
+          dlActiveWidget.appendChild(item);
+        });
+        
+        if (hasActive) {
+          dlActiveWidget.classList.add('active');
+        } else {
+          dlActiveWidget.classList.remove('active');
+        }
+      }
+
+      // Update modal list if open
+      if (!dlOverlay.classList.contains('active')) return;
       
       if (!data || data.length === 0) {
         dlList.innerHTML = '<div class="loading-text">No active downloads</div>';

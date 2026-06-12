@@ -961,3 +961,58 @@ html {
 .dir-item svg {
   min-width: 16px;
 }
+
+/* Global Active Download Widget */
+.dl-active-widget {
+  position: fixed;
+  top: 10.5rem;
+  right: 3rem;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 250px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(20px);
+  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.dl-active-widget.active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.dl-aw-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dl-aw-title {
+  font-size: 0.75rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+  font-family: monospace;
+}
+
+.dl-aw-progress-bg {
+  height: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  width: 100%;
+}
+
+.dl-aw-progress-fill {
+  height: 100%;
+  background: var(--accent-red);
+  width: 0%;
+  transition: width 0.3s ease, background-color 0.5s ease;
+}
+
+.dl-aw-progress-fill.complete {
+  background: white;
+}

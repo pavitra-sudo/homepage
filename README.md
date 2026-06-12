@@ -1,147 +1,65 @@
 # Cyber Anime Homepage
 
-A high-performance, visually striking custom homepage designed with a cyberpunk red-black glassmorphism aesthetic. This project serves as a personalized dashboard, featuring dynamic widgets, an interactive environment, and a modular "Inventory Hub" for various utility tools.
+A fully modular, cyberpunk-themed custom dashboard built with a Go backend and a vanilla ES6 JavaScript frontend. It features an integrated download manager, a daily anime schedule tracker, a live Spotify visualizer widget, dynamic quick links, and a QR code generator.
 
 ## Features
 
-- **Dynamic Visuals:** Looping video background with a subtle red vignette glow and a responsive glowing red particle cursor trail.
-- **Search Integration:** Centrally placed, animated search bar configured via local JSON.
-- **Anime Quotes Widget:** Displays random anime quotes from a local data source with a cool terminal-style text scrambling decryption effect.
-- **Spotify Now Playing:** Context-aware widget that visualizes active Spotify playback with a CSS-animated equalizer.
-- **System Inventory Hub:** A unified modular tool interface containing:
-  - **Quick Links:** Add, edit, and delete personal web links. Automatically fetches website favicons and saves them to local storage.
-  - **Anime Schedule:** Tracks what's airing today or any day of the week using the Jikan API. Includes countdowns to the exact air time.
-  - **Spotify Stream:** Embedded Spotify player modal for continuous music playback.
-  - **QR Generator:** Generate, display, and instantly download QR codes for any text or URL.
-- **Secure Local Server:** Powered by a lightweight Go server (`index.go`) running on HTTPS to avoid browser security restrictions for APIs and modular fetch requests.
-
----
+*   **Aria2 Download Manager**: Directly handles Torrents and Magnet links securely using the `aria2c` process. Includes dual-step metadata fetching for granular file selection, progress tracking, and secure deletion.
+*   **Anime Schedule Tracker**: Integrates with the Jikan (MyAnimeList) API to track what anime is airing today, complete with real-time countdowns.
+*   **Spotify Stream Integration**: Includes an embedded player with an animated audio-visualizer widget for tracking active playback.
+*   **Modular Architecture**: Built utilizing strict SOLID principles. The Go backend features decoupled services for state management and HTTP handling, while the Javascript frontend utilizes modular ES imports.
+*   **Aesthetic UI**: High-end glassmorphism design with a customizable animated cursor trail (`particles.js`), real-time scrambling quote text, and a persistent looping video background.
 
 ## Prerequisites
 
-- [Go](https://golang.org/doc/install) (1.16 or higher)
-- Web Browser
+To run this dashboard, your system must have the following dependencies installed:
+*   **[Go (Golang)](https://go.dev/)**: Required to compile and run the backend web server.
+*   **[Aria2](https://aria2.github.io/)**: Required for the download manager to operate. The binary `aria2c` must be accessible in your system's PATH.
 
-### Generate TLS Certificates
+## Installation & Setup
 
-Since the server uses HTTPS (required for some browser features like clipboard or secure contexts), you must generate local SSL certificates.
+We have provided automated setup scripts for both Linux/macOS and Windows to automatically install dependencies, update Go modules to their latest versions, and compile the backend.
 
-1. Open a terminal in the root of the project.
-2. Create the `certificates` directory:
+### For Linux / macOS
+1. Open your terminal and navigate to the project directory.
+2. Make the script executable:
    ```bash
-   mkdir certificates
+   chmod +x setup.sh
    ```
-3. Generate a self-signed certificate using OpenSSL (or use `mkcert` for trusted local certs):
+3. Run the script:
    ```bash
-   openssl req -x509 -newkey rsa:4096 -keyout certificates/key.pem -out certificates/cert.pem -sha256 -days 365 -nodes -subj "/CN=localhost"
+   ./setup.sh
    ```
+   *Note: This script will attempt to install or upgrade `aria2` using your system's package manager (`apt`, `dnf`, `pacman`, or `brew`) if you have `sudo` privileges.*
 
----
-
-## Running Manually
-
-1. Open your terminal in the project directory.
-2. Run the Go server:
-   ```bash
-   go run index.go
-   ```
-3. Open your browser and navigate to: `https://localhost:8088` (You may need to accept the self-signed certificate warning in your browser).
-
----
-
-## Running as a Background System Service
-
-To have the homepage server start automatically in the background when you boot your computer, follow the instructions for your operating system.
-
-### 🐧 Linux (Systemd Service)
-
-1. First, compile the Go server to an executable binary:
-   ```bash
-   go build -o homepage_server index.go
-   ```
-2. Create a new systemd service file:
-   ```bash
-   sudo nano /etc/systemd/system/homepage.service
-   ```
-3. Paste the following configuration (replace `/path/to/homepage` with your actual absolute project path and update the `User`):
-   ```ini
-   [Unit]
-   Description=Cyber Anime Homepage Local Server
-   After=network.target
-
-   [Service]
-   Type=simple
-   User=YOUR_USERNAME
-   WorkingDirectory=/path/to/homepage
-   ExecStart=/path/to/homepage/homepage_server
-   Restart=on-failure
-   RestartSec=5
-
-   [Install]
-   WantedBy=multi-user.target
-   ```
-4. Reload systemd, enable the service to start on boot, and start it:
-   ```bash
-   sudo systemctl daemon-reload
-   sudo systemctl enable homepage
-   sudo systemctl start homepage
-   ```
-5. Check the status to ensure it's running:
-   ```bash
-   sudo systemctl status homepage
-   ```
-
-### 🪟 Windows
-
-You have two main options on Windows: using the Startup Folder (easier) or creating a proper Background Service using NSSM.
-
-#### Option 1: The Startup Folder (Easiest)
-
-1. Compile the Go server to a Windows executable:
+### For Windows
+1. Open Command Prompt or PowerShell and navigate to the project directory.
+2. Run the batch script:
    ```cmd
-   go build -o homepage_server.exe index.go
+   setup.bat
    ```
-2. Create a new text file in the project folder named `start_homepage.vbs`. This VBScript will run the server completely invisibly without leaving a command prompt window open.
-3. Paste the following into `start_homepage.vbs` (change the path to match yours):
-   ```vbscript
-   Set WshShell = CreateObject("WScript.Shell") 
-   WshShell.CurrentDirectory = "C:\path\to\homepage"
-   WshShell.Run chr(34) & "C:\path\to\homepage\homepage_server.exe" & Chr(34), 0
-   Set WshShell = Nothing
+   *Note: On Windows, you will need to install `aria2` manually from their [releases page](https://github.com/aria2/aria2/releases) and ensure `aria2c.exe` is added to your Environment Variables PATH.*
+
+## Running the Dashboard
+
+Once the setup script finishes compiling the backend, a new binary file (`homepage` on Linux/macOS, or `homepage.exe` on Windows) will be created.
+
+1. Start the server:
+   ```bash
+   # Linux/macOS
+   ./homepage
+   
+   # Windows
+   homepage.exe
    ```
-4. Press `Win + R`, type `shell:startup`, and press Enter. This opens your Startup folder.
-5. Right-click the `start_homepage.vbs` file, select "Create shortcut", and move that shortcut into the Startup folder.
-
-#### Option 2: Windows Service using NSSM (Robust)
-
-1. Compile the executable:
-   ```cmd
-   go build -o homepage_server.exe index.go
+2. Open your web browser and navigate to:
    ```
-2. Download [NSSM (Non-Sucking Service Manager)](http://nssm.cc/) and extract it.
-3. Open an Administrator Command Prompt and navigate to the extracted `nssm\win64` folder.
-4. Run the install command:
-   ```cmd
-   nssm install HomepageServer
+   https://localhost:8088
    ```
-5. A GUI window will pop up. Configure the following:
-   - **Path:** Browse and select your `homepage_server.exe`.
-   - **Details tab:** Set the Display name to "Cyber Anime Homepage Server".
-6. Click **Install service**.
-7. Start the service by running:
-   ```cmd
-   nssm start HomepageServer
-   ```
-   *Note: Ensure the `certificates` directory is in the same folder as the `.exe` so the server can find it.*
 
----
+*Note: Since the server uses local SSL certificates for secure local HTTP traffic (required for privacy and some browser features), you may need to accept the self-signed certificate warning in your browser.*
 
-## Configuration
-
-The homepage behavior is highly modular and reads from local JSON files located in the `config/` directory.
-
-- **`config/search.json`:** Configures the default search engine, parameters, and placeholder text.
-- **`config/ui.json`:** Defines the background video path and browser tab icon.
-- **`config/inventory/spotifystream.json`:** Sets the default Spotify playlist/album URI.
-- **`config/inventory/animeschedular.json`:** Specifies the Jikan API endpoint for anime schedules.
-- **`quotes/quotes.json`:** A list of quotes displayed randomly by the quote widget.
+## Customization
+*   **Background Videos**: Drop new `.mp4` files into `public/backgrounds/` and update `public/index.html`.
+*   **Quotes**: Edit `public/quotes/quotes.json` to change the randomly generated dashboard text.
+*   **Configuration**: Modify `public/config/` JSON files to adjust your Spotify playlist URI or default download directory.

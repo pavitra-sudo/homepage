@@ -49,8 +49,8 @@ func (h *Handlers) HandleDownloadsAPI(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if !strings.HasPrefix(req.URL, "magnet:?xt=urn:btih:") && !strings.HasSuffix(req.URL, ".torrent") {
-			http.Error(w, "Only Magnet links or Torrent files are allowed", http.StatusBadRequest)
+		if !strings.HasPrefix(req.URL, "magnet:") && !strings.HasSuffix(req.URL, ".torrent") && !strings.HasPrefix(req.URL, "http://") && !strings.HasPrefix(req.URL, "https://") {
+			http.Error(w, "Only Magnet, Torrent, or HTTP(s) links are allowed", http.StatusBadRequest)
 			return
 		}
 

@@ -3,6 +3,7 @@ package service
 import (
 	"homepage/internal/core"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 )
@@ -33,10 +34,23 @@ func (m *DownloadManager) GetDownloads() []*core.Download {
 }
 
 func (m *DownloadManager) AddDownload(reqUrl, dir, selectFiles string) (*core.Download, error) {
-	name := "Unknown Torrent"
+	name := ""
 	if parsed, err := url.Parse(reqUrl); err == nil {
 		if dn := parsed.Query().Get("dn"); dn != "" {
 			name = dn
+		} else if parsed.Scheme == "http" || parsed.Scheme == "https" {
+			pathParts := strings.Split(parsed.Path, "/")
+			if len(pathParts) > 0 && pathParts[len(pathParts)-1] != "" {
+				name = pathParts[len(pathParts)-1]
+			}
+		}
+	}
+	
+	if name == "" {
+		if strings.HasPrefix(reqUrl, "magnet:") {
+			name = "Unknown Torrent"
+		} else {
+			name = "Unknown Download"
 		}
 	}
 
